@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/GridLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:columnCount="3"
+    android:useDefaultMargins="true" >
+
+    <TextView
+        android:id="@+id/lblRevolvingSpeed"
+        android:layout_column="0"
+        android:layout_row="0"
+        android:layout_gravity="right"
+        android:text="@string/revolvingSpeed" />
+
+    <TextView
+        android:id="@+id/valAllTimeHigh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_column="1"
+        android:layout_row="0"
+        android:ems="8"
+        android:text="all time" />
+
+    <TextView
+        android:id="@+id/unitsRpmAllTimeHigh"
+        android:layout_column="2"
+        android:layout_row="0"
+        android:layout_gravity="left"
+        android:text="@string/rpmUnits" />
+
+    <TextView
+        android:id="@+id/lblAllTimeHigh"
+        android:layout_column="0"
+        android:layout_row="1"
+        android:layout_gravity="right"
+        android:text="@string/allTimeHigh" />
+
+    <TextView
+        android:id="@+id/valRevolvingSpeed"
+        android:layout_column="1"
+        android:layout_row="1"
+        android:ems="8"
+        android:text="revolving" />
+
+    <TextView
+        android:id="@+id/unitsRpmRevolvingSpeed"
+        android:layout_column="2"
+        android:layout_row="1"
+        android:layout_gravity="left"
+        android:text="@string/rpmUnits" />
+
+    <Button
+        android:id="@+id/start"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="3"
+        android:layout_row="2"
+        android:layout_gravity="left"
+        android:onClick="startRecording"
+        android:text="@string/start" />
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="3"
+        android:layout_row="3"
+        android:layout_gravity="left"
+        android:onClick="stopRecording"
+        android:text="@string/stop" />
+
+    <Button
+        android:id="@+id/clear"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_column="0"
+        android:layout_columnSpan="3"
+        android:layout_row="4"
+        android:layout_gravity="left"
+        android:onClick="clearHandler"
+        android:text="@string/clear" />
+
+</GridLayout>

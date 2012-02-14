@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Gyrotwister</string>
+	<string name="start">Start</string>
+	<string name="stop">Stop</string>
+	<string name="clear">Clear</string>
+	<string name="allTimeHigh">All time high:</string>
+	<string name="revolvingSpeed">Revolving speed:</string>
+	<string name="rpmUnits">[rpm]</string>
+</resources>
+		
