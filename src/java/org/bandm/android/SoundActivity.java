@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.bandm.android.MorseDecoder;
 import org.bandm.android.R;
 
 import android.app.Activity;
@@ -182,8 +183,9 @@ public class SoundActivity extends Activity {
 
 	public void clearHandler(View view) {
 		valAllTimeHigh.setText("0");
-		int randomNum = (int) Math.ceil(Math.random() * 100);
-		valRevolvingSpeed.setText(""+randomNum);
+		Double d = new Double(Math.ceil(Math.random() * 100));
+		int randNum = d.intValue();
+		valRevolvingSpeed.setText("randNum: "+randNum);
 	}
 
 }
