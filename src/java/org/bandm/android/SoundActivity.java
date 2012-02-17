@@ -5,9 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.bandm.android.MorseDecoder;
-import org.bandm.android.R;
-
 import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -15,13 +12,14 @@ import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class SoundActivity extends Activity {
 
 	/** at least 2 times higher than the sound frequency */
-	public static final int RECORDER_SAMPLE_RATE = 32000; 
+	public static final int RECORDER_SAMPLE_RATE = 32000;
 	public static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_CONFIGURATION_MONO;
 	public static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
 
@@ -30,23 +28,18 @@ public class SoundActivity extends Activity {
 	private Thread recordingThread = null;
 	private boolean isRecording = false;
 
-	private Button startRecBtn;
-	private Button stopRecBtn;
-
-	private TextView valAllTimeHigh;
-	private TextView valRevolvingSpeed;
-
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		valAllTimeHigh = (TextView) findViewById(R.id.valAllTimeHigh);
-		valRevolvingSpeed = (TextView) findViewById(R.id.valRevolvingSpeed);
+		final TextView valAllTimeHigh = (TextView) findViewById(R.id.valAllTimeHigh);
+		final TextView valRevolvingSpeed = (TextView) findViewById(R.id.valRevolvingSpeed);
 
-		startRecBtn = (Button) findViewById(R.id.start);
-		stopRecBtn = (Button) findViewById(R.id.stop);
+		final Button startRecBtn = (Button) findViewById(R.id.start);
+		final Button stopRecBtn = (Button) findViewById(R.id.stop);
+		final Button clearBtn = (Button) findViewById(R.id.clear);
 
 		startRecBtn.setEnabled(true);
 		stopRecBtn.setEnabled(false);
@@ -60,41 +53,38 @@ public class SoundActivity extends Activity {
 		switch (minBufferSize) {
 		case AudioRecord.ERROR_BAD_VALUE:
 			msg = "The recording parameters are not supported by the hardware, or an invalid parameter was passed";
-			Log.e(this.getLocalClassName(), msg);
+			Log.e(SoundActivity.class.getSimpleName(), msg);
 			break;
 		case AudioRecord.ERROR:
 			msg = "The implementation was unable to query the hardware for its output properties, or the minimum " +
 				"buffer size expressed in bytes";
-			Log.e(this.getLocalClassName(), msg);
+			Log.e(SoundActivity.class.getSimpleName(), msg);
 			break;
 		default:
-			Log.d(this.getLocalClassName(), "minBufferSize: " + minBufferSize);
+			Log.d(SoundActivity.class.getSimpleName(), "minBufferSize: " + minBufferSize);
 			break;
 		}
-	}
 
-	public void startRecording(View view) {
-		Log.d(this.getLocalClassName(), "Start Recording");
-
-		startRecBtn.setEnabled(false);
-		stopRecBtn.setEnabled(true);
-		stopRecBtn.requestFocus();
-
-		recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-				RECORDER_SAMPLE_RATE, RECORDER_CHANNELS,
-				RECORDER_AUDIO_ENCODING, minBufferSize);
-
-		recorder.startRecording();
-		isRecording = true;
-		recordingThread = new Thread(new Runnable() {
-
-			//@Override
-			public void run() {
-				writeAudioDataToTempFile();
+		OnClickListener startListener = new OnClickListener() {
+			public void onClick(View v) {
+				startRecording(startRecBtn, stopRecBtn);
 			}
-		}, "AudioRecorder Thread");
+		};
+		startRecBtn.setOnClickListener(startListener);
 
-		recordingThread.start();
+		OnClickListener stopListener = new OnClickListener() {
+			public void onClick(View v) {
+				stopRecording(startRecBtn, stopRecBtn);
+			}
+		};
+		stopRecBtn.setOnClickListener(stopListener);
+
+		OnClickListener clearListener = new OnClickListener() {
+			public void onClick(View v) {
+				clearHandler(valAllTimeHigh, valRevolvingSpeed);
+			}
+		};
+		clearBtn.setOnClickListener(clearListener);
 	}
 
 	private String getTempFilename() {
@@ -128,16 +118,16 @@ public class SoundActivity extends Activity {
 				bytesRead = recorder.read(data, 0, minBufferSize);
 				if (bytesRead == AudioRecord.ERROR_BAD_VALUE) {
 					msg = "The parameters don't resolve to valid data and indexes";
-					Log.e(this.getLocalClassName(), msg);
+					Log.e(SoundActivity.class.getSimpleName(), msg);
 					break;
 				}
 				else if (bytesRead == AudioRecord.ERROR_INVALID_OPERATION) {
 					msg = "The parameters don't resolve to valid data and indexes";
-					Log.e(this.getLocalClassName(), msg);
+					Log.e(SoundActivity.class.getSimpleName(), msg);
 					break;
 				}
 				msg = "Bytes read: "+bytesRead;
-				Log.e(this.getLocalClassName(), msg);
+				Log.e(SoundActivity.class.getSimpleName(), msg);
 				try {
 					outStream.write(data);
 				} catch (IOException e) {
@@ -158,8 +148,16 @@ public class SoundActivity extends Activity {
 		file.delete();
 	}
 
-	public void stopRecording(View view) {
-		Log.d(this.getLocalClassName(), "Stop recording");
+	public void clearHandler(TextView valAllTimeHigh, TextView valRevolvingSpeed) {
+		Log.d(SoundActivity.class.getSimpleName(), "clearHandler(..)");
+		valAllTimeHigh.setText("0");
+		Double d = new Double(Math.ceil(Math.random() * 100));
+		int randNum = d.intValue();
+		valRevolvingSpeed.setText("randNum: "+randNum);
+	}
+
+	private void stopRecording(final Button startRecBtn, final Button stopRecBtn) {
+		Log.d(SoundActivity.class.getSimpleName(), "stopRecording(..)");
 
 		startRecBtn.setEnabled(true);
 		stopRecBtn.setEnabled(false);
@@ -181,11 +179,27 @@ public class SoundActivity extends Activity {
 		decoder.execute(file);
 	}
 
-	public void clearHandler(View view) {
-		valAllTimeHigh.setText("0");
-		Double d = new Double(Math.ceil(Math.random() * 100));
-		int randNum = d.intValue();
-		valRevolvingSpeed.setText("randNum: "+randNum);
-	}
+	private void startRecording(final Button startRecBtn, final Button stopRecBtn) {
+		Log.d(SoundActivity.class.getSimpleName(), "startRecording(..)");
 
+		startRecBtn.setEnabled(false);
+		stopRecBtn.setEnabled(true);
+		stopRecBtn.requestFocus();
+
+		recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
+				RECORDER_SAMPLE_RATE, RECORDER_CHANNELS,
+				RECORDER_AUDIO_ENCODING, minBufferSize);
+
+		recorder.startRecording();
+		isRecording = true;
+
+		Runnable runnable = new Runnable() {
+			public void run() {
+				writeAudioDataToTempFile();
+			}
+		};
+		recordingThread = new Thread(runnable, "AudioRecorder Thread");
+
+		recordingThread.start();
+	}
 }
