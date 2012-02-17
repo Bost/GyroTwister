@@ -97,10 +97,13 @@ public class SoundActivity extends Activity {
 		if (tempFile.exists()) {
 			tempFile.delete();
 		}
-		return (file.getAbsolutePath() + "/" + "signal.raw");
+		String tempFilename = file.getAbsolutePath() + "/" + "signal.raw";
+		return tempFilename;
 	}
 
 	private void writeAudioDataToTempFile() {
+		Log.d(SoundActivity.class.getSimpleName(), "writeAudioDataToTempFile(..)");
+
 		byte data[] = new byte[minBufferSize];
 		String filename = getTempFilename();
 		FileOutputStream outStream = null;
@@ -108,6 +111,7 @@ public class SoundActivity extends Activity {
 		try {
 			outStream = new FileOutputStream(filename);
 		} catch (FileNotFoundException e) {
+			Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
 			e.printStackTrace();
 		}
 
@@ -131,6 +135,7 @@ public class SoundActivity extends Activity {
 				try {
 					outStream.write(data);
 				} catch (IOException e) {
+					Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
 					e.printStackTrace();
 				}
 			}
@@ -138,6 +143,7 @@ public class SoundActivity extends Activity {
 			try {
 				outStream.close();
 			} catch (IOException e) {
+				Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
 				e.printStackTrace();
 			}
 		}
