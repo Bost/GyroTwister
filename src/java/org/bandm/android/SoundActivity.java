@@ -14,7 +14,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.jjoe64.graphview.BarGraphView;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphView.GraphViewData;
+import com.jjoe64.graphview.GraphView.GraphViewSeries;
 
 public class SoundActivity extends Activity {
 
@@ -85,6 +91,32 @@ public class SoundActivity extends Activity {
 			}
 		};
 		clearBtn.setOnClickListener(clearListener);
+
+		int i = 0;
+		// init example series data
+		GraphViewSeries exampleSeries = new GraphViewSeries(new GraphViewData[] {
+				  new GraphViewData(i++, 0.4d)
+				, new GraphViewData(i++, 0.8d)
+				, new GraphViewData(i++, 1.1d)
+				, new GraphViewData(i++, 1.4d)
+				, new GraphViewData(i++, 1.6d)
+				, new GraphViewData(i++, 1.8d)
+				, new GraphViewData(i++, 1.9d)
+				, new GraphViewData(i++, 2.0d)
+				, new GraphViewData(i++, 2.05d)
+				, new GraphViewData(i++, 2.1d)
+				, new GraphViewData(i++, 2.12d)
+				, new GraphViewData(i++, 2.13d)
+		});
+
+		GraphView graphView = new BarGraphView(
+				this // context
+				, "" // heading
+				);
+		graphView.addSeries(exampleSeries); // data
+
+		LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
+		layout.addView(graphView);
 	}
 
 	private String getTempFilename() {
@@ -159,7 +191,7 @@ public class SoundActivity extends Activity {
 		valAllTimeHigh.setText("0");
 		Double d = new Double(Math.ceil(Math.random() * 100));
 		int randNum = d.intValue();
-		valRevolvingSpeed.setText("randNum: "+randNum);
+		valRevolvingSpeed.setText(randNum + "");
 	}
 
 	private void stopRecording(final Button startRecBtn, final Button stopRecBtn) {
