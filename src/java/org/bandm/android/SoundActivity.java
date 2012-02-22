@@ -93,8 +93,7 @@ public class SoundActivity extends Activity {
 		clearBtn.setOnClickListener(clearListener);
 
 		int i = 0;
-		// init example series data
-		GraphViewSeries exampleSeries = new GraphViewSeries(new GraphViewData[] {
+		GraphViewData[] arrGraphViewData = new GraphViewData[] {
 				  new GraphViewData(i++, 0.4d)
 				, new GraphViewData(i++, 0.8d)
 				, new GraphViewData(i++, 1.1d)
@@ -106,8 +105,10 @@ public class SoundActivity extends Activity {
 				, new GraphViewData(i++, 2.05d)
 				, new GraphViewData(i++, 2.1d)
 				, new GraphViewData(i++, 2.12d)
-				, new GraphViewData(i++, 2.13d)
-		});
+				, new GraphViewData(i++, 2.13d)};
+
+		// init example series data
+		GraphViewSeries exampleSeries = new GraphViewSeries(arrGraphViewData);
 
 		GraphView graphView = new BarGraphView(
 				this // context
@@ -181,10 +182,10 @@ public class SoundActivity extends Activity {
 		}
 	}
 
-	private void deleteTempFile() {
-		File file = new File(getTempFilename());
-		file.delete();
-	}
+//	private void deleteTempFile() {
+//		File file = new File(getTempFilename());
+//		file.delete();
+//	}
 
 	public void clearHandler(TextView valAllTimeHigh, TextView valRevolvingSpeed) {
 		Log.d(SoundActivity.class.getSimpleName(), "clearHandler(..)");
