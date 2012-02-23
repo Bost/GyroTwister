@@ -37,7 +37,14 @@
     (.superOnCreate bundle)
     (.setContentView R$layout/main)
     )
-  (let 
+
+  ; TODO use map for the method findViewById. Example:
+  ; (let [
+  ;        [var0 var1]
+  ;                 (map #(.findViewById this %) [R$id/id0 R$id/id1])
+  ;      ]
+  ; )
+  (let
     [
      valRevolvingSpeed (.findViewById this R$id/valRevolvingSpeed)
      startRecBtn (.findViewById this R$id/start)
@@ -48,23 +55,37 @@
     (.setEnabled stopRecBtn false)
     (.setEnabled startRecBtn true)
 
-    (.setOnClickListener clearBtn
-      (proxy [View$OnClickListener] []
-        (onClick [view]
-                 (clearHandler valRevolvingSpeed)
-                 )))
+    ; create a proxy object clearListener which implements the onClick method
+    ; and attach clearListener to the clearBtn using the setOnClickListener method
+    ; TODO use reify (= 'materialize') instead of proxy because:
+    ; - reify can only implement interfaces. It cannot exted classes (proxy can)
+    ; - reify is directly supported by the host platform
+    (let [
+          listener (proxy [View$OnClickListener] []
+                     (onClick [view]
+                              (clearHandler valRevolvingSpeed)
+                              ))
+          ]
+      (.setOnClickListener clearBtn listener)
+      )
 
-    (.setOnClickListener startRecBtn
-      (proxy [View$OnClickListener] []
-        (onClick [view]
-                 (startRecording startRecBtn stopRecBtn)
-                 )))
+    (let [
+          listener (proxy [View$OnClickListener] []
+                     (onClick [view]
+                              (startRecording startRecBtn stopRecBtn)
+                              ))
+          ]
+      (.setOnClickListener startRecBtn listener)
+      )
 
-    (.setOnClickListener stopRecBtn
-      (proxy [View$OnClickListener] []
-        (onClick [view]
-                 (stopRecording startRecBtn stopRecBtn)
-                 )))
+    (let [
+          listener (proxy [View$OnClickListener] []
+                     (onClick [view]
+                              (stopRecording startRecBtn stopRecBtn)
+                              ))
+          ]
+      (.setOnClickListener stopRecBtn listener)
+      )
 
     (Log/d (str *ns*) "graphview {")
 
@@ -90,7 +111,7 @@
      ]
      (.addSeries graphView exampleSeries)
      (.addView layout graphView)
-    )
+     )
 
     ;; TODO (str *ns*) produces 'closure.core' instead of 'org.bandm.android.SoundActivity' hmm :(
     (Log/d (str *ns*) "graphview }")
