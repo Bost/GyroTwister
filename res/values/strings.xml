@@ -4,8 +4,9 @@
 	<string name="start">Start</string>
 	<string name="stop">Stop</string>
 	<string name="clear">Clear</string>
-	<string name="allTimeHigh">All time high:</string>
-	<string name="revolvingSpeed">Revolving speed:</string>
-	<string name="rpmUnits">[rpm]</string>
+	<string name="allTimeHigh">All time high [rpm]:</string>
+	<string name="revolvingSpeed">Revolving speed [rpm]:</string>
+	<string name="initAllTimeHigh">0</string>
+	<string name="initRevolvingSpeed">0</string>
 </resources>
 		
