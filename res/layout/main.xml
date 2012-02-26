@@ -75,4 +75,83 @@
             android:orientation="vertical" >
         </LinearLayout>
 
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/log0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/layout"
+            android:text="log0" />
+
+        <TextView
+            android:id="@+id/log1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log0"
+            android:text="log1" />
+
+        <TextView
+            android:id="@+id/log2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log1"
+            android:text="log2" />
+
+        <TextView
+            android:id="@+id/log3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log2"
+            android:text="log3" />
+
+		<TextView
+            android:id="@+id/log4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log3"
+            android:text="log4" />
+
+		<TextView
+            android:id="@+id/log5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log4"
+            android:text="log5" />
+
+		<TextView
+            android:id="@+id/log6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log5"
+            android:text="log6" />
+
+		<TextView
+            android:id="@+id/log7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/start"
+            android:layout_below="@+id/log6"
+            android:text="log7" />
+
+		<TextView
+		    android:id="@+id/warnUSBConnected0"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_above="@+id/valAllTimeHigh"
+		    android:layout_toRightOf="@+id/stop" />
+
+		<TextView
+		    android:id="@+id/warnUSBConnected1"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_alignBaseline="@+id/valAllTimeHigh"
+		    android:layout_alignBottom="@+id/valAllTimeHigh"
+		    android:layout_toRightOf="@+id/stop" />
+
+        </RelativeLayout>

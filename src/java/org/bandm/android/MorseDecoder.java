@@ -22,14 +22,14 @@ public class MorseDecoder extends AsyncTask<File, Void, Void> {
         double magnitude; 
 
         int bufferSize = AudioRecord.getMinBufferSize(
-        		SoundActivity.RECORDER_SAMPLE_RATE,
+                8000, // sampleRateInHz
                 AudioFormat.CHANNEL_CONFIGURATION_MONO,
                 AudioFormat.ENCODING_PCM_16BIT);
 
         GoertzelFilter filter = new GoertzelFilter(
-        		SoundActivity.RECORDER_SAMPLE_RATE,
-        		1200,
-        		bufferSize);
+                8000, // samplingRate
+                1200,
+                bufferSize);
         filter.init();
 
         for (int i = 0; i < files.length; i++) {

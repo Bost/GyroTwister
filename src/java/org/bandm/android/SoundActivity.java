@@ -1,15 +1,14 @@
 package org.bandm.android;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.app.Activity;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.MediaRecorder.OnErrorListener;
+import android.media.MediaRecorder.OnInfoListener;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -24,19 +23,21 @@ import com.jjoe64.graphview.GraphView.GraphViewSeries;
 
 public class SoundActivity extends Activity {
 
-	/** at least 2 times higher than the sound frequency */
-	public static final int RECORDER_SAMPLE_RATE = 32000;
-	public static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_CONFIGURATION_MONO;
-	public static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
+	private final String outFileName = "soundSample.3gp";
+	private MediaRecorder recorder = null;
 
-	private AudioRecord recorder = null;
-	private int minBufferSize = 0;
-	private Thread recordingThread = null;
-	private boolean isRecording = false;
+	private final String verbose = "V";
+	private final String debug = "D";
+	private final String info = "I";
+	private final String warn = "W";
+	private final String error = "E";
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		// here on this place the logAction(..) cannot be used - the app the not initialized yet
+		Log.v(SoundActivity.class.getSimpleName(), "onCreate(..) {");
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
@@ -47,198 +48,254 @@ public class SoundActivity extends Activity {
 		final Button stopRecBtn = (Button) findViewById(R.id.stop);
 		final Button clearBtn = (Button) findViewById(R.id.clear);
 
-		startRecBtn.setEnabled(true);
+		// No files can be saved to the external storage if an USB cable is connected
+		boolean isExtStorageRW = !isUSBCableConnected();
+		String logLevel = isExtStorageRW ? debug : warn;
+		String msg = "External storage writable: " + isExtStorageRW;
+		logAction(logLevel, msg);
+
+		startRecBtn.setEnabled(isExtStorageRW);
 		stopRecBtn.setEnabled(false);
-
-		minBufferSize = AudioRecord.getMinBufferSize(
-				RECORDER_SAMPLE_RATE,
-				RECORDER_CHANNELS,
-				RECORDER_AUDIO_ENCODING);
-
-		String msg;
-		switch (minBufferSize) {
-		case AudioRecord.ERROR_BAD_VALUE:
-			msg = "The recording parameters are not supported by the hardware, or an invalid parameter was passed";
-			Log.e(SoundActivity.class.getSimpleName(), msg);
-			break;
-		case AudioRecord.ERROR:
-			msg = "The implementation was unable to query the hardware for its output properties, or the minimum " +
-				"buffer size expressed in bytes";
-			Log.e(SoundActivity.class.getSimpleName(), msg);
-			break;
-		default:
-			Log.d(SoundActivity.class.getSimpleName(), "minBufferSize: " + minBufferSize);
-			break;
-		}
 
 		OnClickListener startListener = new OnClickListener() {
 			public void onClick(View v) {
-				startRecording(startRecBtn, stopRecBtn);
+				startRecord(startRecBtn, stopRecBtn);
 			}
 		};
 		startRecBtn.setOnClickListener(startListener);
 
 		OnClickListener stopListener = new OnClickListener() {
 			public void onClick(View v) {
-				stopRecording(startRecBtn, stopRecBtn);
+				stopRecord(startRecBtn, stopRecBtn);
 			}
 		};
 		stopRecBtn.setOnClickListener(stopListener);
 
 		OnClickListener clearListener = new OnClickListener() {
 			public void onClick(View v) {
-				clearHandler(valAllTimeHigh, valRevolvingSpeed);
+				clearRecord(valAllTimeHigh, valRevolvingSpeed);
 			}
 		};
 		clearBtn.setOnClickListener(clearListener);
 
-		int i = 0;
-		GraphViewData[] arrGraphViewData = new GraphViewData[] {
-				  new GraphViewData(i++, 0.4d)
-				, new GraphViewData(i++, 0.8d)
-				, new GraphViewData(i++, 1.1d)
-				, new GraphViewData(i++, 1.4d)
-				, new GraphViewData(i++, 1.6d)
-				, new GraphViewData(i++, 1.8d)
-				, new GraphViewData(i++, 1.9d)
-				, new GraphViewData(i++, 2.0d)
-				, new GraphViewData(i++, 2.05d)
-				, new GraphViewData(i++, 2.1d)
-				, new GraphViewData(i++, 2.12d)
-				, new GraphViewData(i++, 2.13d)};
+		if (isExtStorageRW) {
+			// display log messages instead of the graph
+		}
+		else {
+			TextView logEntry;
+			logEntry = (TextView) findViewById(R.id.warnUSBConnected0);
+			logEntry.setText("WARN:");
+			logEntry = (TextView) findViewById(R.id.warnUSBConnected1);
+			logEntry.setText("USB connected!");
 
-		// init example series data
-		GraphViewSeries exampleSeries = new GraphViewSeries(arrGraphViewData);
+			// init example series data
+			int i = 0;
+			GraphViewData[] arrGraphViewData = new GraphViewData[] {
+					new GraphViewData(i++, 0.4d)
+					, new GraphViewData(i++, 0.8d)
+					, new GraphViewData(i++, 1.1d)
+					, new GraphViewData(i++, 1.4d)
+					, new GraphViewData(i++, 1.6d)
+					, new GraphViewData(i++, 1.8d)
+					, new GraphViewData(i++, 1.9d)
+					, new GraphViewData(i++, 2.0d)
+					, new GraphViewData(i++, 2.05d)
+					, new GraphViewData(i++, 2.1d)
+					, new GraphViewData(i++, 2.12d)
+					, new GraphViewData(i++, 2.13d)};
 
-		GraphView graphView = new BarGraphView(
-				this // context
-				, "" // heading
-				);
-		graphView.addSeries(exampleSeries); // data
+			GraphViewSeries exampleSeries = new GraphViewSeries(arrGraphViewData);
+			GraphView graphView = new BarGraphView(this , "");	// context: this, heading: ""
 
-		LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
-		layout.addView(graphView);
+			graphView.addSeries(exampleSeries); // data
+
+			LinearLayout layout = (LinearLayout) findViewById(R.id.layout);
+			layout.addView(graphView);
+		}
+		Log.v(SoundActivity.class.getSimpleName(), "onCreate(..) }");
 	}
 
-	private String getTempFilename() {
-		File workDir = getFilesDir();
-		File file = new File(workDir, "tempaudio");
-		if (!file.exists()) {
-			file.mkdirs();
-		}
-		File tempFile = new File(workDir, "signal.raw");
-		if (tempFile.exists()) {
-			tempFile.delete();
-		}
-		String tempFilename = file.getAbsolutePath() + "/" + "signal.raw";
-		return tempFilename;
-	}
+	public void clearRecord(TextView valAllTimeHigh, TextView valRevolvingSpeed) {
+		logAction(verbose, "clearHandler(..) {");
 
-	private void writeAudioDataToTempFile() {
-		Log.d(SoundActivity.class.getSimpleName(), "writeAudioDataToTempFile(..)");
-
-		byte data[] = new byte[minBufferSize];
-		String filename = getTempFilename();
-		FileOutputStream outStream = null;
-
-		try {
-			outStream = new FileOutputStream(filename);
-		} catch (FileNotFoundException e) {
-			Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
-			e.printStackTrace();
-		}
-
-		String msg;
-		int bytesRead = 0;
-		if (outStream != null) {
-			while (isRecording) {
-				bytesRead = recorder.read(data, 0, minBufferSize);
-				if (bytesRead == AudioRecord.ERROR_BAD_VALUE) {
-					msg = "The parameters don't resolve to valid data and indexes";
-					Log.e(SoundActivity.class.getSimpleName(), msg);
-					break;
-				}
-				else if (bytesRead == AudioRecord.ERROR_INVALID_OPERATION) {
-					msg = "The parameters don't resolve to valid data and indexes";
-					Log.e(SoundActivity.class.getSimpleName(), msg);
-					break;
-				}
-				msg = "Bytes read: "+bytesRead;
-				Log.e(SoundActivity.class.getSimpleName(), msg);
-				try {
-					outStream.write(data);
-				} catch (IOException e) {
-					Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
-					e.printStackTrace();
-				}
-			}
-
-			try {
-				outStream.close();
-			} catch (IOException e) {
-				Log.d(SoundActivity.class.getSimpleName(), e.getMessage());
-				e.printStackTrace();
-			}
-		}
-	}
-
-//	private void deleteTempFile() {
-//		File file = new File(getTempFilename());
-//		file.delete();
-//	}
-
-	public void clearHandler(TextView valAllTimeHigh, TextView valRevolvingSpeed) {
-		Log.d(SoundActivity.class.getSimpleName(), "clearHandler(..)");
 		valAllTimeHigh.setText("0");
 		Double d = new Double(Math.ceil(Math.random() * 100));
 		int randNum = d.intValue();
 		valRevolvingSpeed.setText(randNum + "");
+		logAction(info, "Record cleared.");
+
+		logAction(verbose, "clearHandler(..) }");
 	}
 
-	private void stopRecording(final Button startRecBtn, final Button stopRecBtn) {
-		Log.d(SoundActivity.class.getSimpleName(), "stopRecording(..)");
+	private void stopRecord(final Button startRecBtn, final Button stopRecBtn) {
+		logAction(verbose, "stopRecord(..) {");
 
 		startRecBtn.setEnabled(true);
 		stopRecBtn.setEnabled(false);
 		startRecBtn.requestFocus();
 
-		if (recorder != null) {
-			isRecording = false;
-
+		try {
 			recorder.stop();
-			recorder.release();
-
-			recorder = null;
-			recordingThread = null;
+		} catch (IllegalStateException e) {
+			logAction(error, e.getMessage());
+			e.printStackTrace();
+			return;
 		}
+		recorder.reset();
+		recorder.release();
+		recorder = null;
+		logAction(info, "Recording stopped.");
 
-		String tempFileName = getTempFilename();
-		File file = new File(tempFileName);
-		MorseDecoder decoder = new MorseDecoder();
-		decoder.execute(file);
+		logAction(verbose, "stopRecord(..) }");
 	}
 
-	private void startRecording(final Button startRecBtn, final Button stopRecBtn) {
-		Log.d(SoundActivity.class.getSimpleName(), "startRecording(..)");
+	private void startRecord(final Button startRecBtn, final Button stopRecBtn) {
+		logAction(verbose, "startRecord(..) {");
 
 		startRecBtn.setEnabled(false);
 		stopRecBtn.setEnabled(true);
 		stopRecBtn.requestFocus();
 
-		recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-				RECORDER_SAMPLE_RATE, RECORDER_CHANNELS,
-				RECORDER_AUDIO_ENCODING, minBufferSize);
+		recorder = new MediaRecorder();
 
-		recorder.startRecording();
-		isRecording = true;
+		recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+		recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+		recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
-		Runnable runnable = new Runnable() {
-			public void run() {
-				writeAudioDataToTempFile();
+		File filesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+
+		File file = new File(filesDir, outFileName);
+		String filePath = file.getAbsolutePath();
+
+		boolean fileExists = file.exists();
+		if (fileExists) {
+			logAction(verbose, "Deleting existing file: " + filePath);
+			file.delete();
+			logAction(verbose, "Existing file deleted: " + filePath);
+		}
+
+		logAction(verbose, "Creating new file: "+filePath);
+		try {
+			file.createNewFile();
+		} catch (IOException e) {
+			logAction(error, "Error creating new file. " + e.getClass().getSimpleName() +": "+ e.getMessage());
+			e.printStackTrace();
+			return;
+		}
+		String msg;
+		if (fileExists) {
+			msg = "New file created: "+filePath;
+		}
+		else {
+			msg = "Existing file overwritten: "+filePath;
+		}
+		logAction(info, msg);
+
+		recorder.setOutputFile(filePath);
+
+		OnErrorListener errorListener = new OnErrorListener() {
+			public void onError(MediaRecorder mr, int what, int extra) {
+				logAction(debug, "onError(..) {}");
 			}
 		};
-		recordingThread = new Thread(runnable, "AudioRecorder Thread");
+		recorder.setOnErrorListener(errorListener);
 
-		recordingThread.start();
+		OnInfoListener infoListener = new OnInfoListener() {
+			public void onInfo(MediaRecorder mr, int what, int extra) {
+				logAction(debug, "onInfo(..) {}");
+			}
+		};
+		recorder.setOnInfoListener(infoListener);
+
+		try {
+			recorder.prepare();
+		} catch (IllegalStateException e) {
+			logAction(error, "Error preparing recorder. " + e.getClass().getSimpleName() +": "+ e.getMessage());
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			logAction(error, "Error preparing recorder. " + e.getClass().getSimpleName() +": "+ e.getMessage());
+			e.printStackTrace();
+			return;
+		}
+		logAction(verbose, "recorder prepared");
+
+		try {
+			recorder.start();
+		} catch (IllegalStateException e) {
+			logAction(error, "Error starting recorder. " + e.getClass().getSimpleName() +": "+ e.getMessage());
+			e.printStackTrace();
+			return;
+		}
+		logAction(info, "Recording started. Out-file: " + filePath);
+
+		logAction(verbose, "startRecord(..) }");
+	}
+
+	/** The app works only if no USB cable is connected otherwise the external storage does not work.
+	 * In such a case no reasonable logging mechanism is available so print the log messages directly
+	 * on the screen. */
+	private void logAction(String level, String msg)  {
+		boolean isUSBNotConnected = !isUSBCableConnected();
+		if (isUSBNotConnected) {
+			if (!verbose.equals(level)) {
+				int[] arrLogId = {	R.id.log0, R.id.log1, R.id.log2, R.id.log3, R.id.log4, R.id.log5,
+						R.id.log6, R.id.log7 };
+				for (int i = 1; i < arrLogId.length; i++) {
+					int oldId = arrLogId[i - 1];
+					TextView oldLogEntry = (TextView) findViewById(oldId);
+
+					int newId = arrLogId[i];
+					TextView newLogEntry = (TextView) findViewById(newId);
+
+					String newMsg = newLogEntry.getText().toString();
+					oldLogEntry.setText(newMsg);
+				}
+				TextView logEntry = (TextView) findViewById(R.id.log7);
+				logEntry.setText(level+":"+msg);
+			}
+		}
+
+		String tag = SoundActivity.class.getSimpleName();
+		if (verbose.equals(level)) {
+			Log.v(tag, msg);
+		}
+		else if (debug.equals(level)) {
+			Log.d(tag, msg);
+		}
+		else if (info.equals(level)) {
+			Log.i(tag, msg);
+		}
+		else if (warn.equals(level)) {
+			Log.w(tag, msg);
+		}
+		else if (error.equals(level)) {
+			Log.e(tag, msg);
+		}
+		else {
+			Log.e(tag, "Unknown log level: '"+level+"'");
+		}
+	}
+
+	/** No extermal storage is available and writable when a USB cabel is connected */
+	public boolean isUSBCableConnected() {
+		boolean extStorAvailable = false;
+		boolean extStorWriteable = false;
+		String extStorState = Environment.getExternalStorageState();
+
+		if (Environment.MEDIA_MOUNTED.equals(extStorState)) {
+			// We can read and write the media
+			extStorAvailable = extStorWriteable = true;
+		} else if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(extStorState)) {
+			// We can only read the media
+			extStorAvailable = true;
+			extStorWriteable = false;
+		} else {
+			// Something else is wrong. It may be one of many other states, but all we need
+			//  to know is we can neither read nor write
+			extStorAvailable = extStorWriteable = false;
+		}
+		boolean isUSBCableConnected = !(extStorAvailable && extStorWriteable);
+		return isUSBCableConnected;
 	}
 }
