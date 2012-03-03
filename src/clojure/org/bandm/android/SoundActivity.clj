@@ -6,6 +6,7 @@
            [android.webkit WebSettings$ZoomDensity WebViewClient]
            [org.bandm.android R$id R$layout]
            [android.util Log]
+           [android.os Environment Bundle]
 
            [com.jjoe64.graphview BarGraphView]
            [com.jjoe64.graphview GraphView GraphView$GraphViewData GraphView$GraphViewSeries]
@@ -23,6 +24,10 @@
   (.requestFocus startRecBtn)
   )
 
+(defn isUSBCableConnected []
+  (let [extStorState (.getExternalStorageState Environment)]
+    (not (= extStorState Environment/MEDIA_MOUNTED))))
+
 (defn clearHandler [textField]
   (let [
         randNum (java.lang.Math/ceil(* (java.lang.Math/random) 100))
@@ -30,13 +35,28 @@
       (.setText textField (apply str ["" randNum]))
       ))
 
+(defn logAction [logFunc msg]
+    (map #(logFunc %1 %2) [(str *ns*)] [msg]))
+
+;the full fn form lets you use destructuring in the argument vector to unpack the incoming sequence
+;(map (fn [[s e]] (java.net.URLEncoder/encode s e)) [["bar & baz", "UTF-8"]])
+
 (defn -onCreate
   "Called when the activity is initialised."
   [this bundle]
   (doto this
+    (Log/d (str *ns*) "logAction -onCreate {")
     (.superOnCreate bundle)
     (.setContentView R$layout/main)
     )
+;		boolean isExtStorageRW = !isUSBCableConnected();
+;		String logLevel = isExtStorageRW ? debug : warn;
+;		String msg = "External storage writable: " + isExtStorageRW;
+;		logAction(logLevel, msg);
+
+  ;(apply #(Log/d) ["tagname" "test debug level"])
+  ;(logAction Log/i "test info level")
+    (Log/d (str *ns*) "logAction -onCreate }")
 
   (let
     [
@@ -57,6 +77,7 @@
     ; Use reify (= 'materialize') instead of proxy because:
     ; - reify can only implement interfaces. It cannot exted classes (proxy can)
     ; - reify is directly supported by the host platform
+    ; search for "The Expression Problem Revisited"
     (let [
           listener (reify View$OnClickListener
                      (onClick [this view]
