@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 
 import android.app.Activity;
-import android.media.MediaRecorder;
-import android.media.MediaRecorder.OnErrorListener;
-import android.media.MediaRecorder.OnInfoListener;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -23,8 +20,8 @@ import com.jjoe64.graphview.GraphView.GraphViewSeries;
 
 public class SoundActivity extends Activity {
 
-	private final String outFileName = "soundSample.3gp";
-	private MediaRecorder recorder = null;
+	private final String outFileName = "soundSample.wav";
+	private ExtAudioRecorder recorder = null;
 
 	private final String verbose = "V";
 	private final String debug = "D";
@@ -156,11 +153,8 @@ public class SoundActivity extends Activity {
 		stopRecBtn.setEnabled(true);
 		stopRecBtn.requestFocus();
 
-		recorder = new MediaRecorder();
-
-		recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-		recorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-		recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+		//extAudioRecorder = ExtAudioRecorder.getInstanse(true);	  // Compressed recording (AMR)
+		recorder = ExtAudioRecorder.getInstanse(false); // Uncompressed recording (WAV)
 
 		File filesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 
@@ -193,27 +187,10 @@ public class SoundActivity extends Activity {
 
 		recorder.setOutputFile(filePath);
 
-		OnErrorListener errorListener = new OnErrorListener() {
-			public void onError(MediaRecorder mr, int what, int extra) {
-				logAction(debug, "onError(..) {}");
-			}
-		};
-		recorder.setOnErrorListener(errorListener);
-
-		OnInfoListener infoListener = new OnInfoListener() {
-			public void onInfo(MediaRecorder mr, int what, int extra) {
-				logAction(debug, "onInfo(..) {}");
-			}
-		};
-		recorder.setOnInfoListener(infoListener);
 
 		try {
 			recorder.prepare();
 		} catch (IllegalStateException e) {
-			logAction(error, "Error preparing recorder. " + e.getClass().getSimpleName() +": "+ e.getMessage());
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
 			logAction(error, "Error preparing recorder. " + e.getClass().getSimpleName() +": "+ e.getMessage());
 			e.printStackTrace();
 			return;
